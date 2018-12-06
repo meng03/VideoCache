@@ -1,0 +1,16 @@
+PODS:
+  - VIMediaCache (0.4)
+
+DEPENDENCIES:
+  - VIMediaCache
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - VIMediaCache
+
+SPEC CHECKSUMS:
+  VIMediaCache: aa650f82cb114c68a343beb4e67416cf5eb2f3a2
+
+PODFILE CHECKSUM: 0a126353989f1c948fd6db5814041378a633d178
+
+COCOAPODS: 1.5.3
