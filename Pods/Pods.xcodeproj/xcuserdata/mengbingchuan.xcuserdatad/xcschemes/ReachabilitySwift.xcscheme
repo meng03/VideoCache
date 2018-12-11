@@ -14,10 +14,10 @@
             buildForArchiving = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "81B6EDF529064CF4D56DABA0FF4B49EC"
-               BlueprintName = "VIMediaCache"
+               BlueprintIdentifier = "31388A19441060BB3718A17E605B71D2"
+               BlueprintName = "ReachabilitySwift"
                ReferencedContainer = "container:Pods.xcodeproj"
-               BuildableName = "libVIMediaCache.a">
+               BuildableName = "libReachabilitySwift.a">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
