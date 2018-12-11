@@ -24,9 +24,22 @@ class ResourceLoadingRequest {
         dataTask?.cancel()
     }
     
-    func stop() {
-        //4G环境停止下载
+    func finishWithError(error: Error?) {
+        if loadingRequest.isFinished || loadingRequest.isCancelled {
+            
+        } else {
+            loadingRequest.finishLoading(with: error)
+        }
         dataTask?.cancel()
-        loadingRequest.finishLoading(with: nil)
+    }
+    
+    //网络切换
+    func suspend() {
+        //4G环境停止下载
+        dataTask?.suspend()
+    }
+    //恢复下载
+    func resume() {
+        dataTask?.resume()
     }
 }

@@ -73,7 +73,7 @@ extension AudioCacheManager: AudioCacheDelegate {
 extension AudioCacheManager:  URLSessionDataDelegate {
     
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-        guard let current = self.penddingRequest.first(where: {$0.dataTask?.taskIdentifier == dataTask.taskIdentifier}),
+        guard let current = requestWithTaskId(taskId: dataTask.taskIdentifier),
             let response = response as? HTTPURLResponse else  {
                 return
         }
@@ -98,7 +98,7 @@ extension AudioCacheManager:  URLSessionDataDelegate {
     
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         if !data.isEmpty {
-            if let request = self.penddingRequest.first(where: {$0.dataTask?.taskIdentifier == dataTask.taskIdentifier}) {
+            if let request = requestWithTaskId(taskId: dataTask.taskIdentifier) {
                 request.currentLength += data.count
                 request.loadingRequest.dataRequest?.respond(with: data)
                 if request.currentLength == request.totalLength {
@@ -111,13 +111,20 @@ extension AudioCacheManager:  URLSessionDataDelegate {
     }
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        
+        if let error = error,let request = requestWithTaskId(taskId: task.taskIdentifier) {
+            request.finishWithError(error: error)
+        }
     }
     
 }
 
 //工具方法
 extension AudioCacheManager {
+    
+    func requestWithTaskId(taskId: Int) -> ResourceLoadingRequest? {
+        return self.penddingRequest.first(where: {$0.dataTask?.taskIdentifier == taskId})
+    }
+    
     //获取response中的数据长度
     func responseLength(response: HTTPURLResponse) -> Int64 {
         if let range = response.allHeaderFields["Content-Range"] as? String {

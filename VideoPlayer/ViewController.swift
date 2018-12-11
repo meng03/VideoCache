@@ -19,7 +19,6 @@ class ViewController: UIViewController {
     var player: VideoPlayer!
     var cacheManager = AudioCacheManager()
     
-    
     override func loadView() {
         super.loadView()
         commonInit()

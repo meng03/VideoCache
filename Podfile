@@ -1,3 +1,3 @@
-target 'VideoPlayer' do
-    pod 'VIMediaCache'
+target 'VideoPlayer' do    
+    pod 'ReachabilitySwift'
 end
