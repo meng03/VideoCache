@@ -8,11 +8,14 @@
 
 import UIKit
 import AVFoundation
+import Reachability
 
 class ViewController: UIViewController {
-
+    
     let button = UIButton()
     let slider = UISlider()
+    
+    let reachability = Reachability()
     
     var isplaying = false
     
@@ -36,7 +39,8 @@ class ViewController: UIViewController {
         view.addSubview(button)
         view.addSubview(slider)
         slider.addTarget(self, action: #selector(slideChange), for: .valueChanged)
-        
+        try? reachability?.startNotifier()
+        NotificationCenter.default.addObserver(self, selector: #selector(reachabilityChanged(note:)), name: Notification.Name.reachabilityChanged, object: nil)
     }
     
     override func viewDidLoad() {
@@ -53,6 +57,20 @@ class ViewController: UIViewController {
             button.setTitle("暂停", for: .normal)
         }
         isplaying = !isplaying
+    }
+    
+    @objc func reachabilityChanged(note: Notification) {
+        guard let status = reachability?.connection else { return }
+        switch status {
+        case .none:
+            ()
+        case .wifi:
+            player.resume()
+            debugPrint("切换到WIFI")
+        case .cellular:
+            player.suspend()
+            debugPrint("切换到4G")
+        }
     }
     
     @objc func slideChange() {

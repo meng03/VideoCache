@@ -9,6 +9,5 @@
 #ifndef bridge_h
 #define bridge_h
 
-#import "VIMediaCache/VIMediaCache.h"
 
 #endif /* bridge_h */

@@ -30,7 +30,10 @@ class AudioCacheManager:NSObject,URLSessionDelegate {
     
     override init() {
         super.init()
-        session = URLSession.init(configuration: .default, delegate: self, delegateQueue: nil)
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 90
+        configuration.timeoutIntervalForResource = 90
+        session = URLSession.init(configuration: configuration, delegate: self, delegateQueue: nil)
     }
     
     func startDownLoad(_ request: ResourceLoadingRequest) {        
@@ -50,6 +53,19 @@ class AudioCacheManager:NSObject,URLSessionDelegate {
         debugPrint("收到代理的请求，加到队列中，启动下载,taskId: \(task.taskIdentifier)")
         task.resume()
     }
+    
+    //挂起请求：用于4G切换
+    func suspend() {
+        penddingRequest.forEach { (request) in
+            request.suspend()
+        }
+    }
+    //恢复请求：用于4G切换
+    func resume() {
+        penddingRequest.forEach { (request) in
+            request.resume()
+        }
+    }
 }
 
 extension AudioCacheManager: AudioCacheDelegate {
@@ -59,6 +75,7 @@ extension AudioCacheManager: AudioCacheDelegate {
             let request = penddingRequest[index]
             penddingRequest.remove(at: index)
             request.cancel()
+            debugPrint("didCancelLoading: \(request.dataTask?.taskIdentifier)")
         }
     }
     
@@ -113,6 +130,7 @@ extension AudioCacheManager:  URLSessionDataDelegate {
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if let error = error,let request = requestWithTaskId(taskId: task.taskIdentifier) {
             request.finishWithError(error: error)
+            debugPrint("didCompleteWithError:\(task.taskIdentifier)")
         }
     }
     

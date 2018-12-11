@@ -166,14 +166,14 @@ class VideoPlayer: NSObject {
         case kLoadedTimeRanges,kPlaybackBufferEmpty,kPlaybackLikelyToKeepUp:
             if kPath == kLoadedTimeRanges {
                 delegate?.videoPlayer(self, cacheProgress: Float(self.loadedTime / self.totalTime))
-                debugPrint("lded:\(currentItem!.loadedTimeRanges)")
+//                debugPrint("lded:\(currentItem!.loadedTimeRanges)")
             }
             if isBufferFull() {
-                debugPrint("lded=================当缓冲好的时候 playbackLikelyToKeepUp")
+//                debugPrint("lded=================当缓冲好的时候 playbackLikelyToKeepUp")
                 delegate?.videoPlayerBufferFull(player: self)
                 playerState = .bufferFull
             }else {
-                debugPrint("lded=================当缓冲好的时候 ,但是当前cursor不在缓冲区")
+//                debugPrint("lded=================当缓冲好的时候 ,但是当前cursor不在缓冲区")
                 delegate?.videoPlayerBufferEmpty(player: self)
                 playerState = .bufferEmpty
             }
@@ -213,6 +213,18 @@ extension VideoPlayer {
         player.pause()
     }
     
+    //网络挂起
+    func suspend() {
+        pause()
+        resourceLoaderDelegate?.suspend()
+        debugPrint("暂停并挂起请求")
+    }
+    
+    func resume() {
+        debugPrint("继续请求，并播放")
+        resourceLoaderDelegate?.resume()
+        self.play()
+    }
     
     /// 选择时间
     ///
@@ -220,7 +232,6 @@ extension VideoPlayer {
     ///   - time: 选择的时间
     ///   - completion: 完成回调
     func seekTime(time: Double? = nil,completion:VoidClosureType? = nil) {
-        debugPrint("seekTime: \(time ?? -1),duration: \(totalTime)")
         var seekedTime = kCMTimeZero
         if let time = time {
             seekedTime = CMTime(seconds: time, preferredTimescale: kPreferredTimescale)
@@ -294,7 +305,7 @@ extension VideoPlayer {
         if #available(iOS 10.0, *) {
             preferredForwardBufferDuration = item.preferredForwardBufferDuration
         }
-        debugPrint("checkIfInCache:\(item.loadedTimeRanges)")
+//        debugPrint("checkIfInCache:\(item.loadedTimeRanges)")
         return item.loadedTimeRanges.contains(where: { (value) -> Bool in
             guard let timeRange = value as? CMTimeRange else { return false }
             let durationTime: TimeInterval = CMTimeGetSeconds(timeRange.duration)

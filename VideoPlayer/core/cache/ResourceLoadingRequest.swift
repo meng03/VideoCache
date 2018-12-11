@@ -25,21 +25,32 @@ class ResourceLoadingRequest {
     }
     
     func finishWithError(error: Error?) {
-        if loadingRequest.isFinished || loadingRequest.isCancelled {
-            
-        } else {
+        if isRequestRuning() {
             loadingRequest.finishLoading(with: error)
         }
         dataTask?.cancel()
     }
     
-    //网络切换
+    //网络切换,停止下载
     func suspend() {
         //4G环境停止下载
-        dataTask?.suspend()
+        if let state = dataTask?.state ,state == .running {
+            dataTask?.suspend()
+        }
     }
     //恢复下载
     func resume() {
-        dataTask?.resume()
+        if !isRequestRuning() { return }
+        if let state = dataTask?.state ,state == .suspended {
+            dataTask?.resume()
+        }
+    }
+    
+    func isRequestRuning() -> Bool {
+        if loadingRequest.isCancelled || loadingRequest.isFinished {
+            return false
+        }else {
+            return true
+        }
     }
 }
