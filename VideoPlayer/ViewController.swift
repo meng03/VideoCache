@@ -53,7 +53,7 @@ class ViewController: UIViewController {
             player.pause()
             button.setTitle("播放", for: .normal)
         }else {
-            player.play()
+            _ = player.play()
             button.setTitle("暂停", for: .normal)
         }
         isplaying = !isplaying
@@ -117,7 +117,7 @@ extension ViewController: VideoPlayerDelegate {
         
     }
     
-    func videoPlayer(_ player: VideoPlayer, statusChange: AVPlayerStatus) {
+    func videoPlayer(_ player: VideoPlayer, statusChange: AVPlayer.Status) {
         print("status:\(statusChange == .readyToPlay)")
     }
     

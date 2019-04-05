@@ -75,7 +75,7 @@ extension AudioCacheManager: AudioCacheDelegate {
             let request = penddingRequest[index]
             penddingRequest.remove(at: index)
             request.cancel()
-            debugPrint("didCancelLoading: \(request.dataTask?.taskIdentifier)")
+            debugPrint("didCancelLoading: \(String(describing: request.dataTask?.taskIdentifier))")
         }
     }
     

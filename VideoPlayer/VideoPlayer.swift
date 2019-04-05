@@ -65,7 +65,7 @@ class VideoPlayer: NSObject {
     /// 视频总时间
     var totalTime: TimeInterval {
         //防止除数为0的问题
-        guard let totalTime = currentItem?.duration,totalTime != kCMTimeIndefinite else {
+        guard let totalTime = currentItem?.duration,totalTime != CMTime.indefinite else {
             return 1
         }
         return max(CMTimeGetSeconds(totalTime),1)
@@ -117,10 +117,6 @@ class VideoPlayer: NSObject {
             player.replaceCurrentItem(with: playerItem)
             currentItem = playerItem
             debugPrint("currentItem 的内容 = \(String(describing: currentItem?.asset))")
-            //静音可播放声音
-            let videoSession = AVAudioSession.sharedInstance()
-            try? videoSession.setCategory(AVAudioSessionCategoryPlayback)
-            try? videoSession.setActive(true)
             playToEnd = false
             addObserverProperty()
             addNotification()
@@ -212,7 +208,7 @@ extension VideoPlayer {
     func resume() {
         debugPrint("继续请求，并播放")
         resourceLoaderDelegate?.resume()
-        self.play()
+        _ = self.play()
     }
     
     /// 选择时间
@@ -221,7 +217,7 @@ extension VideoPlayer {
     ///   - time: 选择的时间
     ///   - completion: 完成回调
     func seekTime(time: Double? = nil,completion:VoidClosureType? = nil) {
-        var seekedTime = kCMTimeZero
+        var seekedTime = CMTime.zero
         if let time = time {
             seekedTime = CMTime(seconds: time, preferredTimescale: kPreferredTimescale)
         }else if let cursor = cursor{
