@@ -32,14 +32,14 @@ public class ResourceLoadingRequest {
     }
     
     //网络切换,停止下载
-    func suspend() {
+    public func suspend() {
         //4G环境停止下载
         if let state = dataTask?.state ,state == .running {
             dataTask?.suspend()
         }
     }
     //恢复下载
-    func resume() {
+   public func resume() {
         if !isRequestRuning() { return }
         if let state = dataTask?.state ,state == .suspended {
             dataTask?.resume()

@@ -24,11 +24,11 @@ protocol AudioNetDelegate: AVAssetResourceLoaderDelegate {
 
 public class AudioNetManager:NSObject,URLSessionDelegate {
     
-    var customPrefix = "AudioNet"
+    public var customPrefix = "AudioNet"
     var session: URLSession!
     var penddingRequest =  [ResourceLoadingRequest]()
     
-    override init() {
+    public override init() {
         super.init()
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 90
