@@ -34,7 +34,7 @@ class ViewController: UIViewController {
         let url = "http://mvvideo10.meitudata.com/572ff691113842657.mp4"
         player.resourceLoaderDelegate = cacheManager
         player.urlSrting = url
-        button.setTitle("播放", for: .normal)
+        button.setTitle("暂停", for: .normal)
         button.addTarget(self, action: #selector(self.changeState), for: .touchUpInside)
         view.addSubview(button)
         view.addSubview(slider)

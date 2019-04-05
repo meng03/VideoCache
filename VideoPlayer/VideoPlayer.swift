@@ -39,9 +39,6 @@ enum VideoPlayerState {
 
 typealias VoidClosureType = () -> ()
 
-/// 对外提供三个方法，三个属性
-/// 方法：play,pause,seek
-/// 属性：delegate，urlString，totalTime(只读)
 class VideoPlayer: NSObject {
     
     ///相关常量
@@ -96,10 +93,6 @@ class VideoPlayer: NSObject {
     /// 播放状态
     fileprivate var playerState: VideoPlayerState = .bufferEmpty
     fileprivate var playToEnd = false
-    /// 用户点击播放，不一定就会播放，只能是用户期望是播放状态
-    fileprivate var expectedPlayStatus: VideoPlayState {
-        return player.rate != 0 ? .play : .pause
-    }
 
     /// 视频播放URL
     var urlSrting: String? {
@@ -136,7 +129,6 @@ class VideoPlayer: NSObject {
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         guard let kPath = keyPath,!playToEnd && playerState != .fail else {
-//            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
             return
         }
         switch kPath {
@@ -166,14 +158,11 @@ class VideoPlayer: NSObject {
         case kLoadedTimeRanges,kPlaybackBufferEmpty,kPlaybackLikelyToKeepUp:
             if kPath == kLoadedTimeRanges {
                 delegate?.videoPlayer(self, cacheProgress: Float(self.loadedTime / self.totalTime))
-//                debugPrint("lded:\(currentItem!.loadedTimeRanges)")
             }
             if isBufferFull() {
-//                debugPrint("lded=================当缓冲好的时候 playbackLikelyToKeepUp")
                 delegate?.videoPlayerBufferFull(player: self)
                 playerState = .bufferFull
             }else {
-//                debugPrint("lded=================当缓冲好的时候 ,但是当前cursor不在缓冲区")
                 delegate?.videoPlayerBufferEmpty(player: self)
                 playerState = .bufferEmpty
             }
@@ -298,7 +287,7 @@ extension VideoPlayer {
     
     //文档中说可能有多个range，经过实验，只有一个，
     //这个range的length，大于preferredDuration就说明是可以播放的状态
-    //默认给了个2，iOS10可以设置，项目中设置的是5
+    //默认给了个2，iOS10可以设置
     fileprivate func isBufferFull() -> Bool {
         guard let item = currentItem else { return false }
         var preferredForwardBufferDuration: TimeInterval = 2

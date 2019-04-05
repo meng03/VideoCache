@@ -85,8 +85,9 @@
 		AA369073211ADDAB00040CA1 /* VideoPlayer */ = {
 			isa = PBXGroup;
 			children = (
-				AAF02C1F21207B8C00861085 /* core */,
+				AAF02C17211D817700861085 /* cache */,
 				AA369074211ADDAB00040CA1 /* AppDelegate.swift */,
+				AAA2AAC221B95D7700D603DF /* VideoPlayer.swift */,
 				AA369076211ADDAB00040CA1 /* ViewController.swift */,
 				AA369078211ADDAB00040CA1 /* Main.storyboard */,
 				AA36907B211ADDAE00040CA1 /* Assets.xcassets */,
@@ -100,19 +101,10 @@
 		AAF02C17211D817700861085 /* cache */ = {
 			isa = PBXGroup;
 			children = (
-				AAA2AAC221B95D7700D603DF /* VideoPlayer.swift */,
 				AAF02C18211D81C500861085 /* ResourceLoadingRequest.swift */,
 				AAF02C1A211D83B200861085 /* AudioCacheManager.swift */,
 			);
 			path = cache;
-			sourceTree = "<group>";
-		};
-		AAF02C1F21207B8C00861085 /* core */ = {
-			isa = PBXGroup;
-			children = (
-				AAF02C17211D817700861085 /* cache */,
-			);
-			path = core;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
