@@ -2,7 +2,6 @@ Pod::Spec.new do |s|
   s.name             = 'VideoNet'
   s.version          = '0.9.2'
   s.summary          = '接管系统VideoPlayer的数据加载逻辑.'
-  s.swift_version    = '4.2'
   s.description      = <<-DESC
 接管系统VideoPlayer的数据加载逻辑，用户用户体验
                        DESC
