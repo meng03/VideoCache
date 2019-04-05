@@ -16,7 +16,7 @@ public class AudioCacheError: Error {
     }
 }
 
-public protocol AudioNetDelegate: AVAssetResourceLoaderDelegate {
+protocol AudioNetDelegate: AVAssetResourceLoaderDelegate {
     
     var customPrefix: String { get }
     
@@ -70,7 +70,7 @@ public class AudioNetManager:NSObject,URLSessionDelegate {
 
 extension AudioNetManager: AudioNetDelegate {
     
-    func resourceLoader(_ resourceLoader: AVAssetResourceLoader, didCancel loadingRequest: AVAssetResourceLoadingRequest) {
+    public func resourceLoader(_ resourceLoader: AVAssetResourceLoader, didCancel loadingRequest: AVAssetResourceLoadingRequest) {
         if let index = penddingRequest.firstIndex(where: {$0.loadingRequest == loadingRequest}) {
             let request = penddingRequest[index]
             penddingRequest.remove(at: index)
@@ -79,7 +79,7 @@ extension AudioNetManager: AudioNetDelegate {
         }
     }
     
-    func resourceLoader(_ resourceLoader: AVAssetResourceLoader, shouldWaitForLoadingOfRequestedResource loadingRequest: AVAssetResourceLoadingRequest) -> Bool {
+    public func resourceLoader(_ resourceLoader: AVAssetResourceLoader, shouldWaitForLoadingOfRequestedResource loadingRequest: AVAssetResourceLoadingRequest) -> Bool {
         let request = ResourceLoadingRequest(request: loadingRequest)
         startDownLoad(request)
         return true
@@ -89,7 +89,7 @@ extension AudioNetManager: AudioNetDelegate {
 
 extension AudioNetManager:  URLSessionDataDelegate {
     
-    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+    public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
         guard let current = requestWithTaskId(taskId: dataTask.taskIdentifier),
             let response = response as? HTTPURLResponse else  {
                 return
@@ -113,7 +113,7 @@ extension AudioNetManager:  URLSessionDataDelegate {
         completionHandler(.allow)
     }
     
-    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+    public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         if !data.isEmpty {
             if let request = requestWithTaskId(taskId: dataTask.taskIdentifier) {
                 request.currentLength += data.count
@@ -127,7 +127,7 @@ extension AudioNetManager:  URLSessionDataDelegate {
         }
     }
     
-    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if let error = error,let request = requestWithTaskId(taskId: task.taskIdentifier) {
             request.finishWithError(error: error)
             debugPrint("didCompleteWithError:\(task.taskIdentifier)")
