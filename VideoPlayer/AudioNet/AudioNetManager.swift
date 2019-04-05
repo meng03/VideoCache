@@ -55,13 +55,13 @@ public class AudioNetManager:NSObject,URLSessionDelegate {
     }
     
     //挂起请求：用于4G切换
-    func suspend() {
+    public func suspend() {
         penddingRequest.forEach { (request) in
             request.suspend()
         }
     }
     //恢复请求：用于4G切换
-    func resume() {
+    public func resume() {
         penddingRequest.forEach { (request) in
             request.resume()
         }
