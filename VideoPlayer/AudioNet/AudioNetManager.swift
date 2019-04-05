@@ -9,20 +9,20 @@
 import AVFoundation
 import MobileCoreServices
 
-class AudioCacheError: Error {
+public class AudioCacheError: Error {
     var errorMsg: String?
     init(msg: String) {
         errorMsg = msg
     }
 }
 
-protocol AudioNetDelegate: AVAssetResourceLoaderDelegate {
+public protocol AudioNetDelegate: AVAssetResourceLoaderDelegate {
     
     var customPrefix: String { get }
     
 }
 
-class AudioNetManager:NSObject,URLSessionDelegate {
+public class AudioNetManager:NSObject,URLSessionDelegate {
     
     var customPrefix = "AudioNet"
     var session: URLSession!

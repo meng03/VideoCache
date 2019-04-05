@@ -12,7 +12,6 @@
 		AA36907A211ADDAB00040CA1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA369078211ADDAB00040CA1 /* Main.storyboard */; };
 		AA36907C211ADDAE00040CA1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA36907B211ADDAE00040CA1 /* Assets.xcassets */; };
 		AA36907F211ADDAE00040CA1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA36907D211ADDAE00040CA1 /* LaunchScreen.storyboard */; };
-		AA8A1E04225713D300E3918F /* Congfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8A1E03225713D300E3918F /* Congfig.swift */; };
 		AAA2AAC321B95D7700D603DF /* VideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA2AAC221B95D7700D603DF /* VideoPlayer.swift */; };
 		AAF02C19211D81C500861085 /* ResourceLoadingRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF02C18211D81C500861085 /* ResourceLoadingRequest.swift */; };
 		AAF02C1B211D83B200861085 /* AudioNetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF02C1A211D83B200861085 /* AudioNetManager.swift */; };
@@ -31,7 +30,6 @@
 		AA36907E211ADDAE00040CA1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		AA369080211ADDAE00040CA1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA369086211BDF2C00040CA1 /* bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bridge.h; sourceTree = "<group>"; };
-		AA8A1E03225713D300E3918F /* Congfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Congfig.swift; sourceTree = "<group>"; };
 		AAA2AAC221B95D7700D603DF /* VideoPlayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoPlayer.swift; sourceTree = "<group>"; };
 		AAF02C18211D81C500861085 /* ResourceLoadingRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceLoadingRequest.swift; sourceTree = "<group>"; };
 		AAF02C1A211D83B200861085 /* AudioNetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioNetManager.swift; sourceTree = "<group>"; };
@@ -105,7 +103,6 @@
 			children = (
 				AAF02C18211D81C500861085 /* ResourceLoadingRequest.swift */,
 				AAF02C1A211D83B200861085 /* AudioNetManager.swift */,
-				AA8A1E03225713D300E3918F /* Congfig.swift */,
 			);
 			path = AudioNet;
 			sourceTree = "<group>";
@@ -204,7 +201,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA369077211ADDAB00040CA1 /* ViewController.swift in Sources */,
-				AA8A1E04225713D300E3918F /* Congfig.swift in Sources */,
 				AAA2AAC321B95D7700D603DF /* VideoPlayer.swift in Sources */,
 				AA369075211ADDAB00040CA1 /* AppDelegate.swift in Sources */,
 				AAF02C19211D81C500861085 /* ResourceLoadingRequest.swift in Sources */,

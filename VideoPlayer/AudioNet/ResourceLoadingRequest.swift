@@ -8,7 +8,7 @@
 
 import AVFoundation
 
-class ResourceLoadingRequest {
+public class ResourceLoadingRequest {
     
     var loadingRequest: AVAssetResourceLoadingRequest
     var dataTask: URLSessionDataTask?
