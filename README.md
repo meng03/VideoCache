@@ -1,5 +1,29 @@
-# VideoCache
-VideoCache by Swift
+
+### Feature
+接管网络请求，自主处理下载的数据，方便网络切换，以及缓存实现
+
+### 用法
+
+````
+  var urlAsset: AVURLAsset
+  let resourceLoaderDelegate = AudioNetManager()
+  //拼接特殊前缀
+  let url = URL(string: resourceLoaderDelegate.customPrefix + urlSrting)!
+  urlAsset = AVURLAsset(url: url)
+  //设置资源加载代理
+  urlAsset.resourceLoader.setDelegate(resourceLoaderDelegate, queue: .main)
+  let playerItem = AVPlayerItem(asset: urlAsset)
+  player.replaceCurrentItem(with: playerItem)
+````
+
+### 环境
+* iOS10.0
+* Swift4.2
+
+### 引入
+
+`pod 'VideoNet'`
+
 ### 起因
 
 直接使用`AVPlayer`播放视频，在用户切换4G时，只能销毁`AVPlayer`，在用户点允许播放之后，在重新创建，体验比较差。所以考虑如何接管`AVPlayer`的数据加载，当用户切换到4G环境时，只是暂停下载，缓存的数据仍然可用，也无需销毁`AVPlayer`，比较顺畅。
