@@ -16,15 +16,15 @@ class AudioCacheError: Error {
     }
 }
 
-protocol AudioCacheDelegate: AVAssetResourceLoaderDelegate {
+protocol AudioNetDelegate: AVAssetResourceLoaderDelegate {
     
     var customPrefix: String { get }
     
 }
 
-class AudioCacheManager:NSObject,URLSessionDelegate {
+class AudioNetManager:NSObject,URLSessionDelegate {
     
-    var customPrefix = "kr36"
+    var customPrefix = "AudioNet"
     var session: URLSession!
     var penddingRequest =  [ResourceLoadingRequest]()
     
@@ -68,7 +68,7 @@ class AudioCacheManager:NSObject,URLSessionDelegate {
     }
 }
 
-extension AudioCacheManager: AudioCacheDelegate {
+extension AudioNetManager: AudioNetDelegate {
     
     func resourceLoader(_ resourceLoader: AVAssetResourceLoader, didCancel loadingRequest: AVAssetResourceLoadingRequest) {
         if let index = penddingRequest.firstIndex(where: {$0.loadingRequest == loadingRequest}) {
@@ -87,7 +87,7 @@ extension AudioCacheManager: AudioCacheDelegate {
     
 }
 
-extension AudioCacheManager:  URLSessionDataDelegate {
+extension AudioNetManager:  URLSessionDataDelegate {
     
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
         guard let current = requestWithTaskId(taskId: dataTask.taskIdentifier),
@@ -137,7 +137,7 @@ extension AudioCacheManager:  URLSessionDataDelegate {
 }
 
 //工具方法
-extension AudioCacheManager {
+extension AudioNetManager {
     
     func requestWithTaskId(taskId: Int) -> ResourceLoadingRequest? {
         return self.penddingRequest.first(where: {$0.dataTask?.taskIdentifier == taskId})

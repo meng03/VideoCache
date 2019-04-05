@@ -20,7 +20,7 @@ class ViewController: UIViewController {
     var isplaying = false
     
     var player: VideoPlayer!
-    var cacheManager = AudioCacheManager()
+    var audioNetManager = AudioNetManager()
     
     override func loadView() {
         super.loadView()
@@ -32,7 +32,7 @@ class ViewController: UIViewController {
         player.delegate = self
         view.layer.addSublayer(player.playerLayer)
         let url = "http://mvvideo10.meitudata.com/572ff691113842657.mp4"
-        player.resourceLoaderDelegate = cacheManager
+        player.resourceLoaderDelegate = audioNetManager
         player.urlSrting = url
         button.setTitle("暂停", for: .normal)
         button.addTarget(self, action: #selector(self.changeState), for: .touchUpInside)

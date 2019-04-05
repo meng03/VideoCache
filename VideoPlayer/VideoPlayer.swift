@@ -55,7 +55,7 @@ class VideoPlayer: NSObject {
     }
     
     weak var delegate : VideoPlayerDelegate?
-    weak var resourceLoaderDelegate: AudioCacheManager?
+    weak var resourceLoaderDelegate: AudioNetManager?
     lazy var playerLayer: AVPlayerLayer = {
         let playerLayer = AVPlayerLayer.init(player: self.player)
         playerLayer.videoGravity = AVLayerVideoGravity.resizeAspect
