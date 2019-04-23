@@ -34,7 +34,9 @@
 
 步骤比较简单，分为如下三步
 一、对要播放的URL做些处理，把`schema`改成自定义的形式。这样，`AVPlayer`就会把这个 `URL`的请求转交给我们。
+
 二、自定义一个类，实现`AVAssetResourceLoaderDelegate`协议，重点实现这个协议中的两个方法。`optional public func resourceLoader(_ resourceLoader: AVAssetResourceLoader, shouldWaitForLoadingOfRequestedResource loadingRequest: AVAssetResourceLoadingRequest) -> Bool`和`optional public func resourceLoader(_ resourceLoader: AVAssetResourceLoader, didCancel loadingRequest: AVAssetResourceLoadingRequest)`。
+
 三、给AVURLAsset设置资源代理`urlAsset.resourceLoader.setDelegate(delegate, queue: .main)`。
 ### 具体实现
 
