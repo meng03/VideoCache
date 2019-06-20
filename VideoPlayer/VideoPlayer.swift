@@ -56,6 +56,7 @@ class VideoPlayer: NSObject {
     
     weak var delegate : VideoPlayerDelegate?
     weak var resourceLoaderDelegate: AudioNetManager?
+    weak var resourceLoaderCache: ResourceLoaderManager?
     lazy var playerLayer: AVPlayerLayer = {
         let playerLayer = AVPlayerLayer.init(player: self.player)
         playerLayer.videoGravity = AVLayerVideoGravity.resizeAspect
@@ -107,13 +108,17 @@ class VideoPlayer: NSObject {
             if let delegate = resourceLoaderDelegate,let url = URL(string: delegate.customPrefix + urlSrting) {
                 urlAsset = AVURLAsset(url: url)
                 urlAsset.resourceLoader.setDelegate(delegate, queue: .main)
+            }else if let delegate = resourceLoaderCache,let url = URL(string: delegate.customPrefix + urlSrting){
+                urlAsset = AVURLAsset(url: url)
+                urlAsset.resourceLoader.setDelegate(delegate, queue: delegate.serialQueue)
+                delegate.setup(url: urlSrting)
             }else {
                 urlAsset = AVURLAsset(url: url)
             }
             let playerItem = AVPlayerItem(asset: urlAsset)
             
             playerItem.preferredForwardBufferDuration = 5
-           debugPrint("playerItem 的内容 = \(playerItem.asset)")
+            debugPrint("playerItem 的内容 = \(playerItem.asset)")
             player.replaceCurrentItem(with: playerItem)
             currentItem = playerItem
             debugPrint("currentItem 的内容 = \(String(describing: currentItem?.asset))")
@@ -290,7 +295,7 @@ extension VideoPlayer {
         if #available(iOS 10.0, *) {
             preferredForwardBufferDuration = item.preferredForwardBufferDuration
         }
-//        debugPrint("checkIfInCache:\(item.loadedTimeRanges)")
+        
         return item.loadedTimeRanges.contains(where: { (value) -> Bool in
             guard let timeRange = value as? CMTimeRange else { return false }
             let durationTime: TimeInterval = CMTimeGetSeconds(timeRange.duration)

@@ -21,6 +21,7 @@ class ViewController: UIViewController {
     
     var player: VideoPlayer!
     var audioNetManager = AudioNetManager()
+    var videoCacheMananger = ResourceLoaderManager()
     
     override func loadView() {
         super.loadView()
@@ -32,7 +33,8 @@ class ViewController: UIViewController {
         player.delegate = self
         view.layer.addSublayer(player.playerLayer)
         let url = "http://mvvideo10.meitudata.com/572ff691113842657.mp4"
-        player.resourceLoaderDelegate = audioNetManager
+//        player.resourceLoaderDelegate = audioNetManager
+        player.resourceLoaderCache = videoCacheMananger
         player.urlSrting = url
         button.setTitle("暂停", for: .normal)
         button.addTarget(self, action: #selector(self.changeState), for: .touchUpInside)
@@ -40,7 +42,7 @@ class ViewController: UIViewController {
         view.addSubview(slider)
         slider.addTarget(self, action: #selector(slideChange), for: .valueChanged)
         try? reachability?.startNotifier()
-        NotificationCenter.default.addObserver(self, selector: #selector(reachabilityChanged(note:)), name: Notification.Name.reachabilityChanged, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(reachabilityChanged(note:)), name: Notification.Name.reachabilityChanged, object: nil)        
     }
     
     override func viewDidLoad() {

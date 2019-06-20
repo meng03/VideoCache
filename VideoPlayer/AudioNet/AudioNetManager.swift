@@ -17,9 +17,9 @@ public class AudioCacheError: Error {
 }
 
 protocol AudioNetDelegate: AVAssetResourceLoaderDelegate {
-    
+
     var customPrefix: String { get }
-    
+
 }
 
 public class AudioNetManager:NSObject,URLSessionDelegate {
@@ -128,12 +128,20 @@ extension AudioNetManager:  URLSessionDataDelegate {
     }
     
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        if let error = error,let request = requestWithTaskId(taskId: task.taskIdentifier) {
+        if let error = error {
+            print("urlSessionError: \(error)")
+        }
+        if let request = requestWithTaskId(taskId: task.taskIdentifier) {
             request.finishWithError(error: error)
             debugPrint("didCompleteWithError:\(task.taskIdentifier)")
         }
     }
     
+    public func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
+        if let error = error {
+            print("urlSessionError: \(error)")
+        }
+    }
 }
 
 //工具方法
