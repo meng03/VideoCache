@@ -33,7 +33,6 @@ class ResourceLoadTask: NSObject {
                 }else {
                     range = AVRange(location: dataRequest.requestedOffset, length: Int64(dataRequest.requestedLength))
                 }
-                debugPrint("resourceLoader 有缓存 创建task，avrange: \(range)")
                 checkCache(range,exists: ranges)
             }else {
                 //TODO: - 如果没有DataRequest，填充info，完成，不知道什么时候会发生，可以观察下
@@ -62,18 +61,18 @@ class ResourceLoadTask: NSObject {
     
     func startRequest() {
         //考虑内存问题，这里采用顺序处理，处理一块，respond一块
-        debugPrint("resourceLoader task start")
+        debugPrint("resourceLoader 任务开始,thread: \(Thread.current)")
         rangedRequests.first?.startLoad(completion: {[weak self] in
             self?.origin.finishLoading()
             self?.isFinished = true
-            debugPrint("resourceLoader task end")
+            debugPrint("resourceLoader 任务结束")
         })
     }
     
     func checkCache(_ range: AVRange,exists: [AVRange]){
         //起点相关块，包含起点，或者在起点后
         //终点相关块，包含终点，或者在终点前
-        debugPrint("resourceLoader -----checkCahce start------")
+        debugPrint("resourceLoader -----分析任务，生成request start------")
         debugPrint("resourceLoader expectRange: \(range)")
         debugPrint("resourceLoader exists: \(exists)")
         guard let startRelativeRange = exists.first(where: {range.location < $0.endOffset}),
@@ -160,21 +159,6 @@ class ResourceLoadTask: NSObject {
 extension ResourceLoadTask: RangedRequestDelegate {
     func rangedRequestError(request: RangedRequest, error: AVPlayerCacheError) {
         origin.finishLoading(with: NSError(domain: error.desc, code: -1, userInfo: nil))
-    }
-}
-
-//MARK: - test
-extension ResourceLoadTask {
-    func testCheckCache() {
-        let datas = [AVRange(location: 10, length: 20),
-                     AVRange(location: 40, length: 10),
-                     AVRange(location: 50, length: 15),
-                     AVRange(location: 65, length: 2),
-                     AVRange(location: 70, length: 20),
-                     ]
-        
-        let range1 = AVRange(location: 0, length: 6)
-        
     }
 }
 

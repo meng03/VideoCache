@@ -104,7 +104,7 @@ class RangedLocalRequest: RangedRequest {
     
     override func loadImpl() {
         let start = Date().timeIntervalSince1970
-        debugPrint("resourceLoader 加载本地缓存，range: \(range)")
+        debugPrint("resourceLoader 加载本地缓存，range: \(range)，\(Thread.current)")
         if let data = cacheFile.read(range: range,localRange: localCacheRange) {
             if let contentInfo = origin.contentInformationRequest,let localInfo = cacheFile.info {
                 contentInfo.contentLength = localInfo.contentLength
@@ -112,12 +112,14 @@ class RangedLocalRequest: RangedRequest {
                 contentInfo.isByteRangeAccessSupported = localInfo.isByteRangeAccessSupported
             }
             origin.dataRequest?.respond(with: data)
+            debugPrint("resourceLoader loadImpl 耗时\(Date().timeIntervalSince1970 - start)")
             finishLoad(with: nil)
         }else {
             debugPrint("resourceLoader 加载本地缓存失败")
+            debugPrint("resourceLoader loadImpl 耗时\(Date().timeIntervalSince1970 - start)")
             finishLoad(with: AVPlayerCacheError(desc: "AVPlayerCacheError 加载本地缓存失败"))
         }
-        debugPrint("resourceLoader loadImpl 耗时\(Date().timeIntervalSince1970 - start)")
+        
     }
     
     override func suspend() {
@@ -225,7 +227,7 @@ class RangedWebRequest: RangedRequest {
         
         let task = session.dataTask(with: contentRequest)
         dataTask = task
-        debugPrint("resourceLoader 收到代理的请求，加到队列中，启动下载,requestId: \(task.taskIdentifier)")
+        debugPrint("resourceLoader 收到代理的请求，加入队列中，启动下载,requestId: \(task.taskIdentifier)")
         task.resume()
     }
     
@@ -263,7 +265,7 @@ extension RangedWebRequest:  URLSessionDataDelegate {
         if !data.isEmpty {
             currentLength += Int64(data.count)
             origin.dataRequest?.respond(with: data)
-            if let current = self.data {
+            if let _ = self.data {
                 self.data?.append(data)
             }else {
                 self.data = data
@@ -272,7 +274,6 @@ extension RangedWebRequest:  URLSessionDataDelegate {
                 debugPrint("resourceLoader request完成，requestId：\(dataTask.taskIdentifier)")
                 finishLoad(with: nil)
                 if let data = self.data {
-                    debugPrint("resourceLoader pre write \(data.count)")
                     _ = cacheFile.write(data: data, range: range)
                    
                 }
@@ -282,22 +283,14 @@ extension RangedWebRequest:  URLSessionDataDelegate {
     
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        if cancelledTask.contains(task.taskIdentifier) {
-            if let data = self.data {
-                debugPrint("resourceLoader pre write on cancel \(data.count)")
-                _ = cacheFile.write(data: data, range: AVRange(location: range.location, length: Int64(data.count)))
-            }
+        //请求失败，存储当前data
+        if let data = self.data {
+            debugPrint("resourceLoader pre write on cancel \(data.count)")
+            _ = cacheFile.write(data: data, range: AVRange(location: range.location, length: Int64(data.count)))
         }
         if let error = error,!cancelledTask.contains(task.taskIdentifier) {
             debugPrint("resourceLoader 服务异常，重试,error: \(error)")
-            //避免断网或者服务异常情况下的无限循环
-            //TODO: - check 服务，或者网络
-            restart()
         }
-    }
-    
-    func saveToFile() {
-        
     }
     
 }
@@ -326,7 +319,6 @@ extension RangedWebRequest {
     //获取请求的range
     func rangeValue(loadingRequest: AVAssetResourceLoadingRequest) -> AVRange? {
         guard let dataRequest = loadingRequest.dataRequest else { return nil }
-        let length = dataRequest.requestedLength
         return AVRange(location: dataRequest.requestedOffset, length: Int64(dataRequest.requestedLength))
     }
 }

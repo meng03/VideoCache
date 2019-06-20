@@ -73,16 +73,16 @@ extension ResourceLoaderManager: AudioCacheDelegate {
             tasks.remove(at: index)
             task.cancel()
         }
-        debugPrint("resourceLoader didCancel,requestCount: \(tasks.count)")
+        debugPrint("resourceLoader AVPlayer希望的cancel,requestCount: \(tasks.count),\(Thread.current)")
     }
     
     //起点，接收AVplayer的请求
     func resourceLoader(_ resourceLoader: AVAssetResourceLoader, shouldWaitForLoadingOfRequestedResource loadingRequest: AVAssetResourceLoadingRequest) -> Bool {
+        debugPrint("resourceLoader 从AVPlayer的任务,\(Thread.current)")
         tasks.removeAll(where: {$0.isFinished})
         let task = ResourceLoadTask(request: loadingRequest, cacheFile: cacheFile)
         tasks.append(task)
-        task.startRequest()
-        debugPrint("resourceLoader add request,requestCount: \(tasks.count)")
+        task.startRequest()        
         return true
     }
     

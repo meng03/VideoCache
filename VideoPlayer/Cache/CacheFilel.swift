@@ -51,6 +51,10 @@ class CacheFile {
     }
     
     func saveContentInfo() -> Bool{
+        objc_sync_enter(self)
+        defer {
+            objc_sync_exit(self)
+        }
         let timestamp = Date().timeIntervalSince1970
         guard let info = info,let ranges = ranges else {
             return false
@@ -113,6 +117,7 @@ class CacheFile {
         defer {
             objc_sync_exit(self)
         }
+        debugPrint("resourceLoader 写入数据，线程：\(Thread.current)")
         if data.count == 2 {
             debugPrint("resourceLoader 第一次请求的2字节，是为了获取视频信息，不存储")
             return false
