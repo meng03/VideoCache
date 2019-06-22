@@ -16,6 +16,15 @@ protocol RangedRequestDelegate: class {
 
 typealias RangedRequestCompletion = () -> Void
 
+/// 请求的状态
+///
+/// - initial: 创建完即是初始化状态
+/// - start: loadImpl前会将状态置于start
+/// - suspend: 暂停网络请求的状态
+/// - finish: 请求完成
+/// - cancel: 请求被取消，任务被AVPlayer取消时，任务会取消request
+/// - error: request失败
+/// 后三项出现，request就算结束了，没有用处了
 enum RangedRequestState {
     case initial
     case start
@@ -90,6 +99,8 @@ class RangedLocalRequest: RangedRequest {
     
     var localCacheRange: AVRange
     
+    let semaphore = DispatchSemaphore(value: 1)
+    
     override var isLocal: Bool {
         return true
     }
@@ -102,7 +113,9 @@ class RangedLocalRequest: RangedRequest {
         self.range = expectRange
     }
     
+    
     override func loadImpl() {
+        semaphore.wait()
         let start = Date().timeIntervalSince1970
         debugPrint("resourceLoader 加载本地缓存，range: \(range)，\(Thread.current)")
         if let data = cacheFile.read(range: range,localRange: localCacheRange) {
@@ -121,11 +134,23 @@ class RangedLocalRequest: RangedRequest {
             debugPrint("resourceLoader loadImpl 耗时\(Date().timeIntervalSince1970 - start)")
             finishLoad(with: AVPlayerCacheError(desc: "AVPlayerCacheError 加载本地缓存失败"))
         }
-        
+        semaphore.signal()
     }
     
+    
+    /// suspend的执行线程，与loadImple的执行线程应该不是同一个
+    /// 添加锁，保证，loadImple和suspend不会同时调用
     override func suspend() {
-        self.state = .suspend
+        semaphore.wait()
+        switch state {
+        case .start:
+            self.state = .suspend
+        case .finish:
+            self.next?.suspend()
+        case .initial,.error,.cancel,.suspend:
+            ()
+        }
+        semaphore.signal()
     }
     
     override func resume() {
@@ -133,6 +158,8 @@ class RangedLocalRequest: RangedRequest {
         //需要在resume中finish
         if self.state == .suspend {
             finishLoad(with: nil)
+        }else {
+            assertionFailure("resume的时候 state不是suspend")
         }
     }
     

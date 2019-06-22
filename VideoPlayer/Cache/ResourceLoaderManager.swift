@@ -55,12 +55,14 @@ extension ResourceLoaderManager: AudioCacheDelegate {
     
     //挂起请求：用于4G切换
     func suspend() {
+        //TODO: - 考虑异步操作，suspend可能会有线程同步相关的问题，会阻塞
         tasks.forEach { (task) in
             task.suspend()
         }
     }
     //恢复请求：用于4G切换
     func resume() {
+        //resume应该没有阻塞的风险，可以在主线程执行
         tasks.forEach { (task) in
             task.resume()
         }
