@@ -51,8 +51,8 @@ class RangedRequest: NSObject {
     func startLoad(completion: RangedRequestCompletion?) {
         if state != .initial { return }
         self.completionBlock = completion
-        loadImpl()
         state = .start
+        loadImpl()
     }
     
     func finishLoad(with error: AVPlayerCacheError?) {
@@ -113,7 +113,9 @@ class RangedLocalRequest: RangedRequest {
             }
             origin.dataRequest?.respond(with: data)
             debugPrint("resourceLoader loadImpl 耗时\(Date().timeIntervalSince1970 - start)")
-            finishLoad(with: nil)
+            if self.state == .start {
+                finishLoad(with: nil)
+            }
         }else {
             debugPrint("resourceLoader 加载本地缓存失败")
             debugPrint("resourceLoader loadImpl 耗时\(Date().timeIntervalSince1970 - start)")
@@ -123,11 +125,15 @@ class RangedLocalRequest: RangedRequest {
     }
     
     override func suspend() {
-        
+        self.state = .suspend
     }
     
     override func resume() {
-        
+        //暂停状态，加载完数据，也不会调用finish通知task自己完成了request
+        //需要在resume中finish
+        if self.state == .suspend {
+            finishLoad(with: nil)
+        }
     }
     
 }
