@@ -145,8 +145,13 @@ class ResourceLoadTask: NSObject {
     }
     
     func appendLocalRequest(localCacheRange: AVRange,expectRange: AVRange) {
-        let request = RangedLocalRequest(origin: origin,localCacheRange: localCacheRange, expectRange: expectRange,cacheFile: cacheFile)
-        appendRequest(request: request)
+        if let data = cacheFile.memoryCache[rangedFileNameWith(range: localCacheRange)] {
+            let request = RangedMemoryRequest(origin: origin, data: data, localCacheRange: localCacheRange, expectRange: expectRange, cacheFile: cacheFile)
+            appendRequest(request: request)
+        }else {
+            let request = RangedFileRequest(origin: origin,localCacheRange: localCacheRange, expectRange: expectRange,cacheFile: cacheFile)
+            appendRequest(request: request)
+        }
     }
     
     func appendRequest(request: RangedRequest) {
@@ -157,11 +162,7 @@ class ResourceLoadTask: NSObject {
 }
 
 extension ResourceLoadTask: RangedRequestDelegate {
-    func rangedRequestError(request: RangedRequest, error: AVPlayerCacheError) {
-        origin.finishLoading(with: NSError(domain: error.desc, code: -1, userInfo: nil))
+    func rangedRequestError(request: RangedRequest, error: VideoPlayerCacheError) {
+        origin.finishLoading(with: NSError(domain: error.localizedDescription, code: -1, userInfo: nil))
     }
-}
-
-struct AVPlayerCacheError: Error {
-    var desc: String
 }

@@ -13,10 +13,11 @@
 		AA36907C211ADDAE00040CA1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA36907B211ADDAE00040CA1 /* Assets.xcassets */; };
 		AA36907F211ADDAE00040CA1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA36907D211ADDAE00040CA1 /* LaunchScreen.storyboard */; };
 		AAA2AAC321B95D7700D603DF /* VideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA2AAC221B95D7700D603DF /* VideoPlayer.swift */; };
+		AABC7CE922D0763600B06C5A /* CacheError.swift in Sources */ = {isa = PBXBuildFile; fileRef = AABC7CE822D0763600B06C5A /* CacheError.swift */; };
 		AAD754B122BB279F0079C440 /* ResourceLoaderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD754AD22BB279E0079C440 /* ResourceLoaderManager.swift */; };
 		AAD754B222BB279F0079C440 /* RangedRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD754AE22BB279E0079C440 /* RangedRequest.swift */; };
 		AAD754B322BB279F0079C440 /* ResourceLoadTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD754AF22BB279E0079C440 /* ResourceLoadTask.swift */; };
-		AAD754B422BB279F0079C440 /* CacheFilel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD754B022BB279F0079C440 /* CacheFilel.swift */; };
+		AAD754B422BB279F0079C440 /* CacheFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAD754B022BB279F0079C440 /* CacheFile.swift */; };
 		AAF02C19211D81C500861085 /* ResourceLoadingRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF02C18211D81C500861085 /* ResourceLoadingRequest.swift */; };
 		AAF02C1B211D83B200861085 /* AudioNetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF02C1A211D83B200861085 /* AudioNetManager.swift */; };
 		F0C1D9FF1102460BE77D1727 /* libPods-VideoPlayer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 08E71732B55D6A9EADBA803A /* libPods-VideoPlayer.a */; };
@@ -35,10 +36,11 @@
 		AA369080211ADDAE00040CA1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA369086211BDF2C00040CA1 /* bridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bridge.h; sourceTree = "<group>"; };
 		AAA2AAC221B95D7700D603DF /* VideoPlayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoPlayer.swift; sourceTree = "<group>"; };
+		AABC7CE822D0763600B06C5A /* CacheError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheError.swift; sourceTree = "<group>"; };
 		AAD754AD22BB279E0079C440 /* ResourceLoaderManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResourceLoaderManager.swift; sourceTree = "<group>"; };
 		AAD754AE22BB279E0079C440 /* RangedRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RangedRequest.swift; sourceTree = "<group>"; };
 		AAD754AF22BB279E0079C440 /* ResourceLoadTask.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResourceLoadTask.swift; sourceTree = "<group>"; };
-		AAD754B022BB279F0079C440 /* CacheFilel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CacheFilel.swift; sourceTree = "<group>"; };
+		AAD754B022BB279F0079C440 /* CacheFile.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CacheFile.swift; sourceTree = "<group>"; };
 		AAF02C18211D81C500861085 /* ResourceLoadingRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceLoadingRequest.swift; sourceTree = "<group>"; };
 		AAF02C1A211D83B200861085 /* AudioNetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioNetManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -110,10 +112,11 @@
 		AAD754AC22BB278F0079C440 /* Cache */ = {
 			isa = PBXGroup;
 			children = (
-				AAD754B022BB279F0079C440 /* CacheFilel.swift */,
+				AAD754B022BB279F0079C440 /* CacheFile.swift */,
 				AAD754AE22BB279E0079C440 /* RangedRequest.swift */,
 				AAD754AD22BB279E0079C440 /* ResourceLoaderManager.swift */,
 				AAD754AF22BB279E0079C440 /* ResourceLoadTask.swift */,
+				AABC7CE822D0763600B06C5A /* CacheError.swift */,
 			);
 			path = Cache;
 			sourceTree = "<group>";
@@ -223,7 +226,8 @@
 				AA369077211ADDAB00040CA1 /* ViewController.swift in Sources */,
 				AAA2AAC321B95D7700D603DF /* VideoPlayer.swift in Sources */,
 				AAD754B122BB279F0079C440 /* ResourceLoaderManager.swift in Sources */,
-				AAD754B422BB279F0079C440 /* CacheFilel.swift in Sources */,
+				AABC7CE922D0763600B06C5A /* CacheError.swift in Sources */,
+				AAD754B422BB279F0079C440 /* CacheFile.swift in Sources */,
 				AA369075211ADDAB00040CA1 /* AppDelegate.swift in Sources */,
 				AAD754B322BB279F0079C440 /* ResourceLoadTask.swift in Sources */,
 				AAF02C19211D81C500861085 /* ResourceLoadingRequest.swift in Sources */,

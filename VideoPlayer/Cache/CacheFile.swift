@@ -6,7 +6,7 @@
 //  Copyright © 2019 36Kr. All rights reserved.
 //
 
-import Foundation
+import UIKit
 import CommonCrypto
 
 class CacheFile {
@@ -14,14 +14,21 @@ class CacheFile {
     var url: String
     
     var info: AVContentInfo?
-    var ranges: [AVRange]?
+    private var _ranges: [AVRange]?
     
+    var ranges: [AVRange]? {
+        return _ranges
+    }
+    
+    var memoryCache = [String: Data]()
     
     //如果目录创建失败，就无法缓存，这种情况应该比较少见
     var cachable = true
     
     init(url: String) {
         self.url = url
+        NotificationCenter.default.addObserver(self, selector: #selector(saveContentInfo), name: UIApplication.willTerminateNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(saveContentInfo), name: UIApplication.willResignActiveNotification, object: nil)
     }
     
     class func setup(url: String) -> CacheFile{
@@ -50,13 +57,13 @@ class CacheFile {
         }
     }
     
-    func saveContentInfo() -> Bool{
+    @objc func saveContentInfo() -> Bool{
         objc_sync_enter(self)
         defer {
             objc_sync_exit(self)
         }
         let timestamp = Date().timeIntervalSince1970
-        guard let info = info,let ranges = ranges else {
+        guard let info = info,let ranges = _ranges else {
             return false
         }
         guard let infoPath = CacheFile.videoInfoFilePath(url: url) else { return false }
@@ -65,16 +72,22 @@ class CacheFile {
         dic["utType"] = info.utType
         dic["contentLength"] = info.contentLength
         dic["isByteRangeAccessSupported"] = info.isByteRangeAccessSupported
-        FileManager.default.createFile(atPath: infoPath, contents: nil, attributes: nil)
         dic["ranges"] = ranges.map({["location":$0.location,"length": $0.length]})
+        FileManager.default.createFile(atPath: infoPath, contents: nil, attributes: nil)
         let success = dic.write(toFile: infoPath, atomically: false)
         debugPrint("resourceLoader 缓存文件，保存索引耗时：\(Date().timeIntervalSince1970 - timestamp)")
         return success
     }
     
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+        _ = saveContentInfo()
+    }
+    
     class func loadCacheFile(videoUrl: String) -> CacheFile? {
         let timestamp = Date().timeIntervalSince1970
         guard let infoPath = videoInfoFilePath(url: videoUrl) else { return nil }
+        debugPrint("infoPath: \(infoPath)")
         if !FileManager.default.fileExists(atPath: infoPath) {
             return nil
         }
@@ -106,55 +119,55 @@ class CacheFile {
         
         let file = CacheFile(url: videoUrl)
         file.info = contentInfo
-        file.ranges = ranges
+        file._ranges = ranges
         debugPrint("resourceLoader 缓存文件，加载索引文件耗时：\(Date().timeIntervalSince1970 - timestamp)")
         return file
     }
     
     
-    func write(data: Data,range: AVRange) -> Bool {
-        objc_sync_enter(self)
-        defer {
-            objc_sync_exit(self)
-        }
+    func write(data: Data,range: AVRange) {
         debugPrint("resourceLoader 写入数据，线程：\(Thread.current)")
+        
         if data.count == 2 {
             debugPrint("resourceLoader 第一次请求的2字节，是为了获取视频信息，不存储")
-            return false
+            return
         }
-        guard let cacheDir = CacheFile.dirPathWith(url: url) else { return false }
         
-        if let ranges = ranges,ranges.contains(where: {$0.isEqual(other: range)}) {
-            debugPrint("resourceLoader 已有数据，正常应该是不会存在的")
-            return true
-        }
-        //重叠数据需要特殊处理
-        //AVPlayer会同时有多个请求，请求的range会有重叠，这里需要对重叠的range进行特殊处理
         debugPrint("resourceLoader write range: \(range)")
         if data.count != range.length {
             debugPrint("resourceLoader 写入数据失败：数据长度(\(data.count))和range的长度(\(range.length))不一致")
-            return false
-        }
-        let filepath = cacheDir + "/" + rangedFileNameWith(range: range)
-        FileManager.default.createFile(atPath: filepath, contents: nil, attributes: nil)
-        guard let handle = FileHandle(forWritingAtPath: filepath) else {
-            return false
+            return
         }
         
-        handle.write(data)
-        handle.closeFile()
+        objc_sync_enter(self)
+        //添加range检查，range和已存在的range不应该有重叠
+        if let rs = ranges,rs.contains(where: {$0.hasOverlap(other: range)}) {
+            assertionFailure("range有重叠")
+            objc_sync_exit(self)
+            return
+        }
+        range.cacheType = .memory
+        self.memoryCache[rangedFileNameWith(range: range)] = data
         if ranges != nil {
-            self.ranges?.append(range)
-            self.ranges?.sort(by: { $0.location < $1.location })
+            _ranges?.append(range)
+            _ranges?.sort(by: { $0.location < $1.location })
         }else {
-            ranges = [range]
+            _ranges = [range]
         }
-        if !saveContentInfo() {
-            debugPrint("resourceLoader 写入contentInfo失败")
-        }
+        objc_sync_exit(self)
         
-        debugPrint("resourceLoader 写入缓存完成")
-        return true
+        DispatchQueue.global().async {[weak self] in
+            guard let slf = self,let cacheDir = CacheFile.dirPathWith(url: slf.url) else { return }
+            let filepath = cacheDir + "/" + rangedFileNameWith(range: range)
+            if FileManager.default.createFile(atPath: filepath, contents: data, attributes: nil) {
+                objc_sync_enter(slf)
+                self?.ranges?.first(where: {$0.isEqual(other: range)})?.cacheType = .file
+                self?.memoryCache.removeValue(forKey: rangedFileNameWith(range: range))
+                objc_sync_exit(slf)
+            }else {
+                debugPrint("resourceLoader 写入缓存失败")
+            }
+        }
     }
 
     func read(range: AVRange,localRange: AVRange) -> Data? {
@@ -175,7 +188,7 @@ extension CacheFile {
         guard let cacheDir = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first else {
             assertionFailure("没有拿到cache目录")
             return nil //正常不会发生
-        }        
+        }
         return cacheDir + "/videoCache"
     }
     
@@ -193,10 +206,17 @@ extension CacheFile {
     
 }
 
-struct AVRange {
+enum CacheType: String {
+    case memory
+    case file
+}
+
+public class AVRange {
     
     var location: Int64
     var length: Int64
+    
+    var cacheType = CacheType.file
     
     var endOffset: Int64 {
         return location + length
@@ -216,6 +236,11 @@ struct AVRange {
         return offset >= location && offset <= endOffset
     }
     
+    //是否有重叠
+    func hasOverlap(other: AVRange) -> Bool {
+        return !(other.location >= endOffset || location >= other.endOffset)
+    }
+    
     func isEqual(other: AVRange) -> Bool {
         return self.location == other.location && self.length == other.length
     }
@@ -224,6 +249,12 @@ struct AVRange {
         return location != 0 || length != 0
     }
     
+}
+
+extension AVRange: CustomStringConvertible {
+    public var description: String {
+        return "location: \(location),length: \(length),endOffset: \(endOffset),cacheType: \(cacheType.rawValue)"
+    }
 }
 
 

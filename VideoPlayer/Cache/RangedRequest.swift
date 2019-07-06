@@ -10,8 +10,8 @@ import Foundation
 import AVFoundation
 import MobileCoreServices
 
-protocol RangedRequestDelegate: class {
-    func rangedRequestError(request: RangedRequest,error: AVPlayerCacheError)
+public protocol RangedRequestDelegate: class {
+    func rangedRequestError(request: RangedRequest,error: VideoPlayerCacheError)
 }
 
 typealias RangedRequestCompletion = () -> Void
@@ -34,7 +34,7 @@ enum RangedRequestState {
     case error
 }
 
-class RangedRequest: NSObject {
+public class RangedRequest: NSObject {
     
     //出错了通知task，提前结束
     weak var delegate: RangedRequestDelegate?
@@ -64,7 +64,7 @@ class RangedRequest: NSObject {
         loadImpl()
     }
     
-    func finishLoad(with error: AVPlayerCacheError?) {
+    func finishLoad(with error: VideoPlayerCacheError?) {
         if let error = error {
             state = .error
             delegate?.rangedRequestError(request: self, error: error)
@@ -79,7 +79,7 @@ class RangedRequest: NSObject {
         state = .finish
     }
     
-    override var description: String {
+    override public var description: String {
         return "|\(range),\(isLocal ? "cache" : "web")|"
     }
     
@@ -95,7 +95,36 @@ class RangedRequest: NSObject {
     }
 }
 
-class RangedLocalRequest: RangedRequest {
+class RangedMemoryRequest: RangedRequest {
+    var localCacheRange: AVRange
+
+    override var isLocal: Bool {
+        return true
+    }
+    
+    init(origin: AVAssetResourceLoadingRequest,data: Data,localCacheRange: AVRange,expectRange: AVRange,cacheFile: CacheFile) {
+        self.localCacheRange = localCacheRange
+        super.init()
+        self.data = data
+        self.origin = origin
+        self.cacheFile = cacheFile
+        self.range = expectRange
+    }
+    
+    
+    override func loadImpl() {
+        let dataRg = Range<Data.Index>(NSRange(location: Int(range.location - localCacheRange.location),
+                                               length: Int(range.length)))
+        guard let data = data,let rg = dataRg else {
+            finishLoad(with: .cacheError(reason: .loadMemoryCacheFail(range: localCacheRange)))
+            return
+        }
+        origin.dataRequest?.respond(with: data.subdata(in: rg))
+        finishLoad(with: nil)
+    }
+}
+
+class RangedFileRequest: RangedRequest {
     
     var localCacheRange: AVRange
     
@@ -132,7 +161,7 @@ class RangedLocalRequest: RangedRequest {
         }else {
             debugPrint("resourceLoader 加载本地缓存失败")
             debugPrint("resourceLoader loadImpl 耗时\(Date().timeIntervalSince1970 - start)")
-            finishLoad(with: AVPlayerCacheError(desc: "AVPlayerCacheError 加载本地缓存失败"))
+            finishLoad(with: .cacheError(reason: .loadFileCacheFail(range:localCacheRange)))
         }
         semaphore.signal()
     }
@@ -220,10 +249,12 @@ class RangedWebRequest: RangedRequest {
         }
         self.cacheFile = cacheFile
         self.origin = origin
-        let configuration = URLSessionConfiguration.default
-        configuration.timeoutIntervalForRequest = 90
-        configuration.timeoutIntervalForResource = 90
+        let configuration = URLSessionConfiguration.ephemeral
         session = URLSession.init(configuration: configuration, delegate: self, delegateQueue: nil)
+    }
+    
+    deinit {
+        session.invalidateAndCancel()
     }
     
     func cancel() {
@@ -244,19 +275,19 @@ class RangedWebRequest: RangedRequest {
         //loadingRequest 转 URLRequest
         guard let redirectURL = origin.request.url else { return }
         guard let original = URL(string: redirectURL.absoluteString.replacingOccurrences(of: ResourceLoaderPrefix, with: "")) else { return }
-        var contentRequest = URLRequest(url: original)
+        var contentRequest = URLRequest(url: original, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
         
-        //TODO: - 结构优化
-        if self.range.valid {
-            let rangeValue = "bytes=\(range.location)-\(range.location + Int64(range.length) - 1)"
-            contentRequest.setValue(rangeValue, forHTTPHeaderField:"Range")
-            totalLength = range.length
-        }else if let range = rangeValue(loadingRequest: origin) {
-            self.range = range
-            let rangeValue = "bytes=\(range.location)-\(range.location + Int64(range.length) - 1)"
-            contentRequest.setValue(rangeValue, forHTTPHeaderField:"Range")
-            totalLength = range.length
+        if !self.range.valid {
+            if let range = rangeValue(loadingRequest: origin) {
+                self.range = range
+            }else {
+                assertionFailure("loadingRequest中没有range信息,请检查origin.dataTask.offset")
+                return
+            }
         }
+        let rangeStr = "bytes=\(range.location)-\(range.location + Int64(range.length) - 1)"
+        contentRequest.setValue(rangeStr, forHTTPHeaderField:"Range")
+        totalLength = range.length
         
         let task = session.dataTask(with: contentRequest)
         dataTask = task
@@ -303,26 +334,19 @@ extension RangedWebRequest:  URLSessionDataDelegate {
             }else {
                 self.data = data
             }
-            if currentLength == totalLength {
-                debugPrint("resourceLoader request完成，requestId：\(dataTask.taskIdentifier)")
-                finishLoad(with: nil)
-                if let data = self.data {
-                    _ = cacheFile.write(data: data, range: range)
-                   
-                }
-            }
         }
     }
     
-    
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         //请求失败，存储当前data
-        if let data = self.data {
-            debugPrint("resourceLoader pre write on cancel \(data.count)")
-            _ = cacheFile.write(data: data, range: AVRange(location: range.location, length: Int64(data.count)))
-        }
         if let error = error,!cancelledTask.contains(task.taskIdentifier) {
             debugPrint("resourceLoader 服务异常，重试,error: \(error)")
+        }else if let data = self.data,currentLength == totalLength {
+            debugPrint("resourceLoader request完成，requestId：\(task.taskIdentifier)")
+            finishLoad(with: nil)
+            _ = cacheFile.write(data: data, range: range)
+        }else {
+            //TODO: 完成，但是数据不完整
         }
     }
     
