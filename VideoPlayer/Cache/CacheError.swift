@@ -10,12 +10,10 @@ import Foundation
 
 //参考Kingfisher的error逻辑
 public enum VideoPlayerCacheError: Error {
-    
     public enum CacheErrorReason {
         case loadFileCacheFail(range: AVRange)
         case loadMemoryCacheFail(range: AVRange)
     }
-    
     case cacheError(reason: CacheErrorReason)
 }
 
@@ -28,7 +26,6 @@ extension VideoPlayerCacheError: LocalizedError {
     }
 }
 
-//原因的说明
 extension VideoPlayerCacheError.CacheErrorReason {
     var errorDescripton: String? {
         switch self {

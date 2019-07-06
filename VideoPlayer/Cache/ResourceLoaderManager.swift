@@ -23,6 +23,8 @@ protocol AudioCacheDelegate: AVAssetResourceLoaderDelegate {
     
     func setup(url: String)
     
+    func setup(url: String,configuration: Configuration)
+    
 }
 
 /// 根据AVPlayer的请求，构建task
@@ -31,6 +33,7 @@ protocol AudioCacheDelegate: AVAssetResourceLoaderDelegate {
 class ResourceLoaderManager: NSObject {
     
     var url: String!
+    var configuration: Configuration!
     
     //缓存的文件信息
     var cacheFile: CacheFile!
@@ -48,8 +51,13 @@ extension ResourceLoaderManager: AudioCacheDelegate {
     }
     
     func setup(url: String) {
+        setup(url: url, configuration: Configuration())
+    }
+    
+    func setup(url: String,configuration: Configuration) {
         self.url = url
-        self.cacheFile = CacheFile.setup(url: url)
+        self.configuration = configuration
+        self.cacheFile = CacheFile.setup(url: url,configuration: configuration)
     }
     
     
@@ -90,3 +98,8 @@ extension ResourceLoaderManager: AudioCacheDelegate {
     
 }
 
+//配置类
+class Configuration {
+    var expirationPolicy: CacheExpiration = .days(7)
+    var expirationExtendingPolicy: ExpirationExtending = .reset
+}

@@ -12,9 +12,18 @@ import CommonCrypto
 class CacheFile {
     
     var url: String
+    var configuration: Configuration! {
+        didSet {
+            processConfig()
+        }
+    }
     
     var info: AVContentInfo?
     private var _ranges: [AVRange]?
+    //如果是nil就是永不过期
+    private var expiredDate: TimeInterval?
+    //第一次看，还是之后的缓存使用
+    private var firstLoad = true
     
     var ranges: [AVRange]? {
         return _ranges
@@ -27,17 +36,43 @@ class CacheFile {
     
     init(url: String) {
         self.url = url
-        NotificationCenter.default.addObserver(self, selector: #selector(saveContentInfo), name: UIApplication.willTerminateNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(appWillTerminate), name: UIApplication.willTerminateNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(saveContentInfo), name: UIApplication.willResignActiveNotification, object: nil)
     }
     
-    class func setup(url: String) -> CacheFile{
+    class func setup(url: String,configuration: Configuration) -> CacheFile{
         if let cacheFile = loadCacheFile(videoUrl: url) {
+            cacheFile.configuration = configuration
             return cacheFile
         }else {
             let cacheFile = CacheFile(url: url)
             cacheFile.initDir()
+            cacheFile.configuration = configuration
             return cacheFile
+        }
+    }
+    
+    func processConfig() {
+        //处理过期策略
+        if firstLoad {
+            setupExpiration(policy: configuration.expirationPolicy)
+        }else {
+            switch configuration.expirationExtendingPolicy {
+            case .reset:
+                setupExpiration(policy: configuration.expirationPolicy)
+            case .custom(let policy):
+                setupExpiration(policy: policy)
+            }
+        }
+        
+    }
+    
+    func setupExpiration(policy: CacheExpiration) {
+        switch policy {
+        case .never:
+            self.expiredDate = nil
+        case .days(let day):
+            self.expiredDate = Date().timeIntervalSince1970 + TimeInterval(day) * Const.secondInDays
         }
     }
     
@@ -55,6 +90,11 @@ class CacheFile {
                 self.cachable = false
             }
         }
+    }
+    
+    @objc func appWillTerminate() {
+        _ = saveContentInfo()
+        CacheFile.clean()
     }
     
     @objc func saveContentInfo() -> Bool{
@@ -75,7 +115,13 @@ class CacheFile {
         dic["ranges"] = ranges.map({["location":$0.location,
                                      "length": $0.length,
                                      "end": $0.endOffset]})//end 用来方便检查数据
-        FileManager.default.createFile(atPath: infoPath, contents: nil, attributes: nil)
+        if let date = expiredDate {
+            dic["expiredDate"] = date
+        }
+        if !FileManager.default.fileExists(atPath: infoPath) {
+            FileManager.default.createFile(atPath: infoPath, contents: nil, attributes: nil)
+        }
+        
         let success = dic.write(toFile: infoPath, atomically: false)
         debugPrint("resourceLoader 缓存文件，保存索引耗时：\(Date().timeIntervalSince1970 - timestamp)")
         return success
@@ -142,6 +188,7 @@ class CacheFile {
         let file = CacheFile(url: videoUrl)
         file.info = contentInfo
         file._ranges = ranges
+        file.expiredDate = dic["expiredDate"] as? TimeInterval
         debugPrint("resourceLoader 缓存文件，加载索引文件耗时：\(Date().timeIntervalSince1970 - timestamp)")
         return file
     }
@@ -229,59 +276,37 @@ extension CacheFile {
         return dir + "/info.plist"
     }
     
+    //TODO: 待测试
+    class func clean() {
+        guard let dir = cacheDirPath() else { return }
+        guard let subs = FileManager.default.subpaths(atPath: dir),subs.count > 0 else { return }
+        DispatchQueue.global().async {
+            for sub in subs {
+                checkCacheExpiration(dir: sub)
+            }
+        }
+    }
+    
+    private class func checkCacheExpiration(dir: String) {
+        guard let infoPath = FileManager.default.subpaths(atPath: dir)?.first(where: {$0 == "info.plist"}) else {
+            return
+        }
+        if !FileManager.default.fileExists(atPath: infoPath) {
+            try? FileManager.default.removeItem(atPath: dir)
+            return
+        }
+        guard let dic = NSDictionary(contentsOf: URL(fileURLWithPath: infoPath)) as? [String: Any] else { return }
+        guard let date = dic["expiredDate"] as? TimeInterval else { return }
+        if date < Date().timeIntervalSince1970 {
+            try? FileManager.default.removeItem(atPath: dir)
+        }
+    }
 }
 
 enum CacheType: String {
     case memory
     case file
 }
-
-public class AVRange {
-    
-    var location: Int64
-    var length: Int64
-    
-    var cacheType = CacheType.file
-    
-    var endOffset: Int64 {
-        return location + length
-    }
-    
-    init() {
-        self.location = 0
-        self.length = 0
-    }
-    
-    init(location: Int64, length: Int64) {
-        self.location = location
-        self.length = length
-    }
-    
-    func isInRange(offset: Int64) -> Bool {
-        return offset >= location && offset <= endOffset
-    }
-    
-    //是否有重叠
-    func hasOverlap(other: AVRange) -> Bool {
-        return !(other.location >= endOffset || location >= other.endOffset)
-    }
-    
-    func isEqual(other: AVRange) -> Bool {
-        return self.location == other.location && self.length == other.length
-    }
-    
-    var valid: Bool {
-        return location != 0 || length != 0
-    }
-    
-}
-
-extension AVRange: CustomStringConvertible {
-    public var description: String {
-        return "location: \(location),length: \(length),endOffset: \(endOffset),cacheType: \(cacheType.rawValue)"
-    }
-}
-
 
 struct AVContentInfo {
     var utType: String
@@ -310,3 +335,12 @@ extension String {
     }
 }
 
+public enum CacheExpiration {
+    case never
+    case days(Int)
+}
+
+public enum ExpirationExtending {
+    case reset
+    case custom(CacheExpiration)
+}

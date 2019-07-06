@@ -34,7 +34,7 @@ enum RangedRequestState {
     case error
 }
 
-public class RangedRequest: NSObject {
+public class RangedRequest {
     
     //出错了通知task，提前结束
     weak var delegate: RangedRequestDelegate?
@@ -79,10 +79,6 @@ public class RangedRequest: NSObject {
         state = .finish
     }
     
-    override public var description: String {
-        return "|\(range),\(isLocal ? "cache" : "web")|"
-    }
-    
     func loadImpl() {
         //子类实现
     }
@@ -92,6 +88,12 @@ public class RangedRequest: NSObject {
     }
     func resume() {
         //子类实现
+    }
+}
+
+extension RangedRequest: CustomStringConvertible {
+    public var description: String {
+        return "|\(range),\(isLocal ? "cache" : "web")|"
     }
 }
 
@@ -118,7 +120,7 @@ class RangedMemoryRequest: RangedRequest {
         guard let data = data,let rg = dataRg else {
             finishLoad(with: .cacheError(reason: .loadMemoryCacheFail(range: localCacheRange)))
             return
-        }
+        }        
         origin.dataRequest?.respond(with: data.subdata(in: rg))
         finishLoad(with: nil)
     }
@@ -409,3 +411,48 @@ func rangedFileNameWith(range: AVRange) -> String {
     return "\(range.location)-\(range.length)".MD5
 }
 
+public class AVRange {
+    
+    var location: Int64
+    var length: Int64
+    
+    var cacheType = CacheType.file
+    
+    var endOffset: Int64 {
+        return location + length
+    }
+    
+    init() {
+        self.location = 0
+        self.length = 0
+    }
+    
+    init(location: Int64, length: Int64) {
+        self.location = location
+        self.length = length
+    }
+    
+    func isInRange(offset: Int64) -> Bool {
+        return offset >= location && offset <= endOffset
+    }
+    
+    //是否有重叠
+    func hasOverlap(other: AVRange) -> Bool {
+        return !(other.location >= endOffset || location >= other.endOffset)
+    }
+    
+    func isEqual(other: AVRange) -> Bool {
+        return self.location == other.location && self.length == other.length
+    }
+    
+    var valid: Bool {
+        return location != 0 || length != 0
+    }
+    
+}
+
+extension AVRange: CustomStringConvertible {
+    public var description: String {
+        return "location: \(location),length: \(length),endOffset: \(endOffset),cacheType: \(cacheType.rawValue)"
+    }
+}
