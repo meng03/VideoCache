@@ -72,11 +72,33 @@ class CacheFile {
         dic["utType"] = info.utType
         dic["contentLength"] = info.contentLength
         dic["isByteRangeAccessSupported"] = info.isByteRangeAccessSupported
-        dic["ranges"] = ranges.map({["location":$0.location,"length": $0.length]})
+        dic["ranges"] = ranges.map({["location":$0.location,
+                                     "length": $0.length,
+                                     "end": $0.endOffset]})//end 用来方便检查数据
         FileManager.default.createFile(atPath: infoPath, contents: nil, attributes: nil)
         let success = dic.write(toFile: infoPath, atomically: false)
         debugPrint("resourceLoader 缓存文件，保存索引耗时：\(Date().timeIntervalSince1970 - timestamp)")
         return success
+    }
+    
+    
+    /// 检查cache是否完整的步骤
+    /// 1、从0开始
+    /// 2、前一个的尾是下一个的首，循环找出从0开始的链的最后一个
+    /// 3、最后一个的endOffset如果不是整个文件的长度，就是不完整的
+    ///
+    /// - Returns: 是否完整
+    func cacheDone() -> Bool {
+        guard let ranges = ranges,let info = info,ranges.count > 0 else { return false }
+        var offset: Int64 = 0
+        var lastRange: AVRange?
+        //下个range
+        while let current = ranges.first(where: {$0.location == offset}) {
+            offset = current.endOffset
+            lastRange = current
+        }
+        guard let last = lastRange else { return false }
+        return last.endOffset == info.contentLength
     }
     
     deinit {
@@ -142,7 +164,7 @@ class CacheFile {
         objc_sync_enter(self)
         //添加range检查，range和已存在的range不应该有重叠
         if let rs = ranges,rs.contains(where: {$0.hasOverlap(other: range)}) {
-            assertionFailure("range有重叠")
+            debugPrint("range有重叠")
             objc_sync_exit(self)
             return
         }
@@ -163,6 +185,9 @@ class CacheFile {
                 objc_sync_enter(slf)
                 self?.ranges?.first(where: {$0.isEqual(other: range)})?.cacheType = .file
                 self?.memoryCache.removeValue(forKey: rangedFileNameWith(range: range))
+                if slf.cacheDone() {
+                    _ = slf.saveContentInfo()
+                }
                 objc_sync_exit(slf)
             }else {
                 debugPrint("resourceLoader 写入缓存失败")
